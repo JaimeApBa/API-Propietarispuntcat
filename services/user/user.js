@@ -1,29 +1,11 @@
 var express = require('express');
 var bcrypt = require('bcrypt');
 
-const validators = require('../middlewares/validators');
-const db = require('../config/database');
+const validators = require('../../middlewares/validators');
+const db = require('../../config/database');
 
-var authentication = require('../middlewares/authentication');
+var authentication = require('../../middlewares/authentication');
 var app = express();
-
-// ==================================
-//  GET a list of users
-// ==================================
-app.get('/', [authentication.IsLoggedIn], (req, res) => {
-    //console.log(req.userData);
-    let sql = "SELECT * FROM user";
-
-    db.query(sql, (err, results) => {
-        if (err) {
-            return res.status(500).json({
-                message: 'Error al buscar usuaris',
-                errors: err
-            });
-        }
-        res.send({ results: results });
-    });
-});
 
 // ==================================
 // GET one user
@@ -35,7 +17,7 @@ app.get('/:id', [authentication.IsLoggedIn], (req, res) => {
     let sql = "SELECT * FROM user WHERE id=?";
     db.query(sql, data, (err, results) => {
         if (err) {
-            return res.status(500).json({
+            return res.status(400).json({
                 message: 'L\'usuari no existeix',
                 errors: err
             });
@@ -48,13 +30,13 @@ app.get('/:id', [authentication.IsLoggedIn], (req, res) => {
 });
 
 // ==================================
-// Add a user
+// Sign up user
 // ==================================
-app.post('/', [validators.validateUser, validators.validateFields], (req, res) => {
+app.post('/', [validators.validateUser, validators.validateFields], async(req, res) => {
 
     let sqlCheck = "SELECT * FROM user WHERE email=?";
 
-    db.query(sqlCheck, req.body.email, (err, result) => {
+    await db.query(sqlCheck, req.body.email, (err, result) => {
         if (err) {
             return res.status(500).json({
                 message: 'Hi ha hagut algun error i no s\'ha pogut crear l\'usuari',
@@ -62,7 +44,7 @@ app.post('/', [validators.validateUser, validators.validateFields], (req, res) =
             });
         }
         if (result.length) {
-            return res.status(409).send({
+            return res.status(400).send({
                 message: 'Aquest usuari ja existeix'
             });
         } else {
@@ -98,7 +80,7 @@ app.post('/', [validators.validateUser, validators.validateFields], (req, res) =
 });
 
 // ==================================
-// Update User. No Email and Password
+// Update User. No Password
 // ==================================
 app.put('/:id', [authentication.IsLoggedIn], (req, res) => {
 
@@ -106,14 +88,15 @@ app.put('/:id', [authentication.IsLoggedIn], (req, res) => {
         req.body.name,
         req.body.fullname,
         req.body.phone,
+        req.body.email,
         req.params.id
     ];
 
-    let sql = "UPDATE user SET name= ?, fullname= ?, phone= ? WHERE id= ?";
+    let sql = "UPDATE user SET name= ?, fullname= ?, phone= ?, email=? WHERE id= ?";
     db.query(sql, data, (err, results) => {
         if (err) {
             return res.status(500).json({
-                message: 'No s\'ha pogut esborrar l\'usuari',
+                message: 'No s\'ha pogut actualitzar l\'usuari',
                 errors: err
             });
         }
@@ -124,6 +107,7 @@ app.put('/:id', [authentication.IsLoggedIn], (req, res) => {
 
 });
 
+/*
 // ==================================
 // Delete User
 // ==================================
@@ -142,5 +126,5 @@ app.delete('/:id', [authentication.IsLoggedIn], (req, res) => {
         res.send({ "status": 200, "error": null, "response": results });
     });
 });
-
+*/
 module.exports = app;
