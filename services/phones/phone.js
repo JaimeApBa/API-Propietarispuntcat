@@ -10,7 +10,7 @@ app.get('/:cif', authentication.IsLoggedIn, async(req, res) => {
 
     let data = [req.params.cif];
 
-    let sql = "SELECT * FROM phone AS p INNER JOIN showphone AS s ON p.id= s.phone WHERE s.community=?";
+    let sql = "SELECT * FROM phone AS p  WHERE p.community=?";
 
     await db.query(sql, data, (err, results) => {
         if (err) {
@@ -31,7 +31,7 @@ app.get('/:cif/:string', authentication.IsLoggedIn, async(req, res) => {
         community: req.params.cif,
         string: req.params.string
     };
-    let sql = "SELECT p.id, p.name, p.numberphone, s.community FROM phone as p INNER JOIN showphone AS s ON s.phone=p.id where p.name LIKE ? AND s.community=?";
+    let sql = "SELECT * FROM phone AS p  WHERE p.name LIKE ? AND p.community=?";
     await db.query(sql, ['%' + data.string + '%', data.community], (err, results) => {
         if (err) {
             return res.status(500).json({
@@ -47,28 +47,31 @@ app.get('/:cif/:string', authentication.IsLoggedIn, async(req, res) => {
 //  ADD a phone
 // ==================================
 app.post('/:cif', authentication.IsLoggedIn, async(req, res) => {
-    let data = [
-        req.body.name,
-        req.body.numberphone,
-        req.params.cif
-    ];
-    let sql = "CALL createPhone (?,?,?)";
+    let data = {
+        name: req.body.name,
+        numberphone: req.body.numberphone,
+        community: req.params.cif
+    };
+
+    let sql = "INSERT INTO phone SET ?";
     await db.query(sql, data, (err, results) => {
+
         if (err && err.errno === 1062) {
             return res.status(400).json({
                 message: 'Aquestes dades ja existeixen',
                 errors: err
             });
-        } else if (err) {
+        } else if (err && err.errno !== 1062) {
             return res.status(500).json({
                 message: 'Error en la base de dades',
                 errors: err
             });
+        } else {
+            res.status(200).send({
+                message: 'Les teves dades s\'han guardat correctament',
+            });
         }
 
-        res.status(200).send({
-            message: 'Les teves dades s\'han guardat correctament',
-        });
     });
 });
 
@@ -100,13 +103,12 @@ app.put('/:id', authentication.IsLoggedIn, async(req, res) => {
 // Remove a phone from a community
 // ====================================================================
 
-app.delete('/:cif/:phone', authentication.IsLoggedIn, async(req, res) => {
+app.delete('/:id', authentication.IsLoggedIn, async(req, res) => {
     let data = [
-        req.params.phone,
-        req.params.cif
+        req.params.id
     ];
 
-    let sql = "DELETE FROM showphone WHERE phone=? AND community=?";
+    let sql = "DELETE FROM phone WHERE id=?";
 
     await db.query(sql, data, (err) => {
 

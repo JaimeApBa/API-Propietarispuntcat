@@ -65,10 +65,10 @@ app.post('/:cif', authentication.IsLoggedIn, async(req, res) => {
     ];
     //querys to database
 
-    let sql = "CALL createProvider(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    let sql = "CALL createProvider(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
     await db.query(sql, data, (err) => {
-
+        console.log(err);
         if (err && err.errno === 1062) {
             return res.status(400).json({
                 message: 'Aquestes dades ja existeixen a la base de dades',
@@ -134,7 +134,7 @@ app.put('/:provider', authentication.IsLoggedIn, async(req, res) => {
         req.body.profession,
         req.params.provider
     ];
-    console.log(data);
+
     // Set data
 
     let sql = "UPDATE provider SET cif=?, name=?, address=?, postalcode=?, city=?, country=?, email=?, phone=?, latitude=?, longitude=?, profession=? WHERE cif=?";

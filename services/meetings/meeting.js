@@ -9,7 +9,7 @@ var app = express();
 app.get('/:cif', authentication.IsLoggedIn, async(req, res) => {
     let data = [req.params.cif];
 
-    let sql = "SELECT * FROM meeting as m WHERE m.community=?";
+    let sql = "SELECT m.id, m.description, m.date, m.place, d.id AS idStatement,d.filename AS statement, doc.id AS idBoardMinute, doc.filename AS boardMinute FROM meeting as m LEFT JOIN statement AS s ON s.meeting=m.id LEFT JOIN document as d ON d.id=s.id LEFT JOIN boardminute AS b ON b.meeting=m.id LEFT JOIN document AS doc ON doc.id=b.id WHERE m.community=?";
 
 
     await db.query(sql, data, (err, results) => {

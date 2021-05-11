@@ -31,7 +31,10 @@ app.get('/:cif/:string', authentication.IsLoggedIn, async(req, res) => {
         community: req.params.cif,
         string: req.params.string
     };
-    let sql = "SELECT r.id, r.description, r.provider, r.community FROM refurbishment AS r INNER JOIN workstate AS w ON w.id=r.workState WHERE r.description LIKE ? AND r.community=?";
+    //let sql = "SELECT r.id, r.description, r.provider, r.community FROM refurbishment AS r INNER JOIN workstate AS w ON w.id=r.workState WHERE r.description LIKE ? AND r.community=?";
+    let sql = "SELECT r.id, r.description, p.cif AS provider, p.name AS providerName, pf.name AS profession, w.name AS workState, d.id AS idBudget, b.numBudget, d.filename AS budget, i.id AS idInvoice, i.numInvoice, dc.filename AS invoice ";
+    sql += "FROM refurbishment AS r INNER JOIN provider AS p ON r.provider=p.cif INNER JOIN profession AS pf ON pf.id=p.profession INNER JOIN workstate AS w ON r.workState=w.id left JOIN budget AS b ON b.refurbishment=r.id left JOIN document as d ON b.id=d.id left JOIN invoice as i ON i.refurbishment=r.id left JOIN document as dc ON i.id=dc.id WHERE r.description LIKE ? AND r.community=? GROUP BY r.id";
+
     await db.query(sql, ['%' + data.string + '%', data.community], (err, results) => {
         if (err) {
             return res.status(500).json({

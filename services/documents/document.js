@@ -37,7 +37,7 @@ app.get("/:cif/:documentType", authentication.IsLoggedIn, async(req, res) => {
             break;
 
         case 'Comunicats':
-            sql = "SELECT d.id, d.description, d.filename, d.comments, d.community, s.dateStatement, s.boardMinute, CONCAT(u.name, ' ', u.fullname) as user FROM statement AS s INNER JOIN document AS d ON s.id=d.id INNER JOIN user AS u ON s.user=u.id WHERE d.community=?";
+            sql = "SELECT d.id, d.description, d.filename, d.comments, d.community, s.dateStatement, s.meeting, CONCAT(u.name, ' ', u.fullname) as user FROM statement AS s INNER JOIN document AS d ON s.id=d.id INNER JOIN user AS u ON s.user=u.id WHERE d.community=?";
             break;
 
         case 'Altres documents':
@@ -91,11 +91,11 @@ app.get("/:cif/:documentType/:string", authentication.IsLoggedIn, async(req, res
             break;
 
         case 'Comunicats':
-            sql = "SELECT d.id, d.description, d.filename, d.comments, d.community, s.dateStatement, s.boardMinute, CONCAT(u.name, ' ', u.fullname) as user FROM statement AS s INNER JOIN document AS d ON s.id=d.id INNER JOIN user AS u ON s.user=u.id WHERE d.description LIKE ? AND d.community=?";
+            sql = "SELECT d.id, d.description, d.filename, d.comments, d.community, s.dateStatement, s.meeting, CONCAT(u.name, ' ', u.fullname) as user FROM statement AS s INNER JOIN document AS d ON s.id=d.id INNER JOIN user AS u ON s.user=u.id WHERE d.description LIKE ? AND d.community=?";
             break;
 
         case 'Altres documents':
-            sql = "SELECT d.id, d.description, d.filename, d.comments, d.community, s.dateStatement, s.boardMinute, CONCAT(u.name, ' ', u.fullname) as user FROM statement AS s INNER JOIN document AS d ON s.id=d.id INNER JOIN user AS u ON s.user=u.id WHERE d.description LIKE ? AND d.community=?";
+            sql = "SELECT d.id, d.description, d.filename, d.comments, d.community, s.dateStatement, s.meeting, CONCAT(u.name, ' ', u.fullname) as user FROM statement AS s INNER JOIN document AS d ON s.id=d.id INNER JOIN user AS u ON s.user=u.id WHERE d.description LIKE ? AND d.community=?";
             break;
 
     }
@@ -155,7 +155,7 @@ app.post("/:cif", authentication.IsLoggedIn, async(req, res) => {
             filesrc = '/public/documents/comunicats/' + now + ' ' + file.name;
             sql = "CALL createStatement(?,?,?,?,?,?,?)";
             if (req.body.boardMinute === '') { req.body.boardMinute = null; }
-            data.push(req.body.dateStatement, req.body.user, req.body.boardMinute);
+            data.push(req.body.dateStatement, req.body.user, req.body.meeting);
             break;
         case 'Altres documents':
             filesrc = '/public/documents/altres/' + now + ' ' + file.name;
@@ -170,13 +170,13 @@ app.post("/:cif", authentication.IsLoggedIn, async(req, res) => {
 
     // set all the data fields to make the query
     data.unshift(req.body.description, req.body.comments, filesrc, req.params.cif);
-    console.log(data);
+
     await db.query(sql, data, (err, result) => {
 
         if (result[0] !== undefined && result[0][0].status === 'error' && result[0][0].errno === 1062) {
 
             return res.status(400).json({
-                message: 'Aquestes número de document ja existeix',
+                message: 'Aquestes document ja existeix',
                 errors: err
             });
         } else if (result[0] !== undefined && result[0][0].status === 'error') {
